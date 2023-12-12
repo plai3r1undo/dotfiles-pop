@@ -18,7 +18,8 @@ vim.opt.scrolloff = 10
 vim.g.mapleader = " "
 vim.cmd("map <leader>q :q<cr>")
 vim.cmd("map <leader>w :w<cr>")
-
+vim.keymap.set("n", "<M-j>", ":m .+1<cr>")
+vim.keymap.set("n", "<M-k>", ":m .-2 <cr>")
 
 
 
@@ -59,10 +60,12 @@ local plugins = {
 
     {'L3MON4D3/LuaSnip', dependencies = { "rafamadriz/friendly-snippets" }},
 
+
+
+
+
 }
-
 local opts = {
-
 }
 
 -- init lazy package manager
@@ -137,15 +140,15 @@ cmp.setup {
 }
 
 
-
 -- init telescope plugin and config keybindings
 local builtin = require('telescope.builtin')
 vim.keymap.set('n', '<leader>f', builtin.find_files, {})
 vim.keymap.set('n', '<leader>g', builtin.live_grep, {})
 
-
 --init lualine and setup
+
 require('lualine').setup {
+
 }
 
 
@@ -186,6 +189,6 @@ require("gruvbox").setup({
   transparent_mode = false, -- default is false
 })
 
-vim.o.background = "dark" -- or "light" for light mode
+vim.o.background = "dark" -- or "light" for light mode --default is dark
 vim.cmd([[colorscheme gruvbox]]) --or vim.cmd[[colorscheme tokyonight]] for tokyo
 
