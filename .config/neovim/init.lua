@@ -1,4 +1,3 @@
-
 -- vim commands to basic personalization
 vim.cmd("set expandtab")
 vim.cmd("set tabstop=4")
@@ -21,8 +20,6 @@ vim.cmd("map <leader>w :w<cr>")
 vim.keymap.set("n", "<M-j>", ":m .+1<cr>")
 vim.keymap.set("n", "<M-k>", ":m .-2 <cr>")
 
-
-
 -- Lazy paackage manager install
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 
@@ -37,6 +34,7 @@ if not vim.loop.fs_stat(lazypath) then
   })
 end
 
+
 vim.opt.rtp:prepend(lazypath)
 -- table of all packages installed by lazy
 
@@ -47,7 +45,18 @@ local plugins = {
     {"nvim-treesitter/nvim-treesitter", build = ":TSUpdate"},
     {"nvim-tree/nvim-tree.lua", version = "*", lazy = false, dependencies = { "nvim-tree/nvim-web-devicons"}}, 
     {"nvim-lualine/lualine.nvim"},
+    {
+  "folke/which-key.nvim",
+  event = "VeryLazy",
+  init = function()
+    vim.o.timeout = true
+    vim.o.timeoutlen = 300
+  end,
+  opts = { }},
 
+    {'alec-gibson/nvim-tetris'},
+    {
+    'goolord/alpha-nvim'};
     -- Lsp below and comp
     {"williamboman/mason.nvim"},
     {'williamboman/mason-lspconfig.nvim'},
@@ -57,67 +66,100 @@ local plugins = {
     {'hrsh7th/nvim-cmp'},
 
     {'saadparwaiz1/cmp_luasnip'},
+    {"L3MON4D3/LuaSnip", build = "make install_jsregexp"},
 
-    {'L3MON4D3/LuaSnip', dependencies = { "rafamadriz/friendly-snippets" }},
-
-
-
+    {'nvim-telescope/telescope-ui-select.nvim' },
 
 
 }
 local opts = {
 }
 
--- init lazy package manager
+    
 
+-- init lazy package manager
+--
 require("lazy").setup(plugins, opts)
 
 --init nvim-tree and config
+--
 local treeFileConfig = require("nvim-tree").setup {}
 vim.cmd("map <leader>e :NvimTreeToggle<cr>")
 
 
+-- int which key
+---@diagnostic disable-next-line: unused-local
+local wk = require("which-key")
+--wk.register(mappings, opts)
+
+
 -- init mason, lsp and completion
 local lsp_zero = require('lsp-zero')
+lsp_zero.preset('recommended')
+lsp_zero.setup()
 lsp_zero.on_attach(function(client, bufnr)
     -- see :help lsp-zero-keybindings
     -- to learn the available actions
      lsp_zero.default_keymaps({buffer = bufnr})
+    local opts = {buffer = bufnr}
+    vim.keymap.set({'n', 'v'}, '<leader>ca', function()
+        vim.lsp.buf.code_action({})
+    end, opts)
     vim.keymap.set('n', 'gr', '<cmd>Telescope lsp_references<cr>', {buffer = bufnr})
 end)
 
 require('mason').setup({})
 require('mason-lspconfig').setup({
-  -- Replace the language servers listed here 
-  -- with the ones you want to install
-    ensure_installed = {'tsserver', 'rust_analyzer'},
+    ensure_installed = {'tsserver', 'rust_analyzer', 'lua_ls', 'bashls','html',},
     handlers = {
-    lsp_zero.default_setup,
-    },
+        lsp_zero.default_setup,
+        tsserver = function()
+            require('lspconfig').tsserver.setup({
+            single_file_support = false,
+            on_attach = function(client, bufnr)
+                print('hello tsserver')
+            end
+        })
+        end,
+    }
 })
-    
 
-local cmp = require('cmp')
+local lspconfig = require("lspconfig")
+lspconfig.lua_ls.setup({})
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+capabilities.textDocument.completion.completionItem.snippetSupport = true
+
+lspconfig.html.setup({
+    capabilities = capabilities,
+    cmd = { "vscode-html-language-server", "--stdio" },
+})
+lspconfig.bashls.setup({})
+
+
+
 local luasnip = require('luasnip')
-
 --may be ueless idk
-luasnip.filetype_extend("lua", {"c"})
-luasnip.filetype_extend("html", {"c"})
 
 --vs code -like 
 require("luasnip.loaders.from_vscode").lazy_load({include = { "python", "html"}})
 
+local cmp = require('cmp')
+
 cmp.setup {
+    sources = {
+        {name = 'nvim_lsp'},
+        {name = 'luasnip'},
+    },
     snippet = {
         expand = function(args)
-        luasnip.lsp_expand(args.body) -- For `luasnip` users.
+        require('luasnip').lsp_expand(args.body) -- For `luasnip` users.
         end,
     },
     mapping = {
-        ['<C-space>'] = cmp.mapping.confirm({select = true}),
-        ['<C-j>'] = cmp.mapping.select_next_item(),
-        ['<C-k>'] = cmp.mapping.select_prev_item(),
-        ['<C-y>'] = cmp.mapping.complete(),
+        ['<S-space>'] = cmp.mapping.confirm({select = true}),
+        ['<S-j>'] = cmp.mapping.select_next_item(),
+        ['<S-k>'] = cmp.mapping.select_prev_item(),
+        ['<S-y>'] = cmp.mapping.complete(),
         ['<CR>'] = cmp.mapping.confirm {select = true},
         ["<S-Tab>"] = cmp.mapping(function(fallback)
         if cmp.visible() then
@@ -127,7 +169,7 @@ cmp.setup {
             luasnip.expand()
         elseif luasnip ~= nil and luasnip.expand_or_jumpable() then
             luasnip.expand_or_jump()
-        elseif check_backspace() then
+        elseif check_backspace ~= nil and check_backspace() then
             fallback()
         else
             fallback()
@@ -145,12 +187,37 @@ local builtin = require('telescope.builtin')
 vim.keymap.set('n', '<leader>f', builtin.find_files, {})
 vim.keymap.set('n', '<leader>g', builtin.live_grep, {})
 
+require("telescope").setup{
+    extensions = {
+        ["ui-select"] = {
+            require("telescope.themes").get_dropdown {
+            }
+        }
+    }
+}
+require("telescope").load_extension("ui-select")
+
+
 --init lualine and setup
 
 require('lualine').setup {
 
 }
 
+
+-- config dashboard
+local alpha = require('alpha')
+local dashboard = require("alpha.themes.dashboard")
+--require'alpha'.setup(require'alpha.themes.dashboard'.config)
+dashboard.section.header.val = {
+[[███╗   ██╗███████╗ ██████╗     ███████╗██╗   ██╗ ██████╗██╗  ██╗██╗███╗   ██╗ ██████╗     ██╗   ██╗██╗███╗   ███╗]],
+[[████╗  ██║██╔════╝██╔═══██╗    ██╔════╝██║   ██║██╔════╝██║ ██╔╝██║████╗  ██║██╔════╝     ██║   ██║██║████╗ ████║]],
+[[██╔██╗ ██║█████╗  ██║   ██║    █████╗  ██║   ██║██║     █████╔╝ ██║██╔██╗ ██║██║  ███╗    ██║   ██║██║██╔████╔██║]],
+[[██║╚██╗██║██╔══╝  ██║   ██║    ██╔══╝  ██║   ██║██║     ██╔═██╗ ██║██║╚██╗██║██║   ██║    ╚██╗ ██╔╝██║██║╚██╔╝██║]],
+[[██║ ╚████║███████╗╚██████╔╝    ██║     ╚██████╔╝╚██████╗██║  ██╗██║██║ ╚████║╚██████╔╝     ╚████╔╝ ██║██║ ╚═╝ ██║]],
+[[╚═╝  ╚═══╝╚══════╝ ╚═════╝     ╚═╝      ╚═════╝  ╚═════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝ ╚═════╝       ╚═══╝  ╚═╝╚═╝     ╚═╝]],
+}
+alpha.setup(dashboard.opts)
 
 
 -- init and setup tree sitter
@@ -191,4 +258,3 @@ require("gruvbox").setup({
 
 vim.o.background = "dark" -- or "light" for light mode --default is dark
 vim.cmd([[colorscheme gruvbox]]) --or vim.cmd[[colorscheme tokyonight]] for tokyo
-
