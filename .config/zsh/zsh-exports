@@ -1,0 +1,27 @@
+#!/bin/bash
+
+
+export PATH="/home/francesco/.local/bin:$PATH"
+export PATH="/home/francesco/.local/bin/.aseprite:$PATH"
+export PATH="~/.local/share/flatpak/exports/bin:$PATH"
+export PATH="/usr/local/:$PATH"
+
+
+#eval "`pip completion --zsh`"
+
+#Spring 
+export XDG_DATA_HOME=${XDG_DATA_HOME:="$HOME/.local/share"}
+export XDG_CACHE_HOME=${XDG_CACHE_HOME:="$HOME/.cache"}
+export XDG_CONFIG_HOME=${XDG_CONFIG_HOME:="$HOME/.config"}
+
+# Sper Mega Spring by xdg-ninga.sh
+
+export ANDROID_HOME=""$XDG_DATA_HOME"/android" 
+alias adb='HOME="$XDG_DATA_HOME"/android adb' # Necessary to use adb and ANDROID
+export GRADLE_USER_HOME="$XDG_DATA_HOME"/gradle
+export GTK2_RC_FILES="$XDG_CONFIG_HOME"/gtk-2.0/gtkrc
+export RUSTUP_HOME="$XDG_DATA_HOME"/rustup
+alias wget=wget --hsts-file="$XDG_DATA_HOME/wget-hsts"
+
+
+
