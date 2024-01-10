@@ -1,0 +1,8 @@
+#-- X deamon keybinds
+
+
+#Audio
+XF86AudioLowerVolume
+    amixer -q set Master 5%- unmute
+XF86AudioRaiseVolume
+    amixer -q set Master 5%+ unmute
