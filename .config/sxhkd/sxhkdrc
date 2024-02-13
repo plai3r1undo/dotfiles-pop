@@ -1,8 +1,16 @@
 #-- X deamon keybinds
 
+#grab keycodes with xev
 
 #Audio
 XF86AudioLowerVolume
     amixer -q set Master 5%- unmute
+
 XF86AudioRaiseVolume
     amixer -q set Master 5%+ unmute
+
+super + shift + {u}
+	ulauncher
+
+XF86AudioMute
+	playerctl play-pause
