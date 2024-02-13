@@ -1,24 +1,41 @@
 -- vim commands to basic personalization
-vim.cmd("set expandtab")
+vim.cmd("set noexpandtab")
+vim.cmd("set autoindent")
 vim.cmd("set tabstop=4")
 vim.cmd("set softtabstop=4")
 vim.cmd("set shiftwidth=4")
+vim.cmd("set termguicolors")
 
---lines number and relative
-vim.opt.nu = true
+
+
 vim.opt.relativenumber = true
+vim.opt.nu= true
 
 --search settings
 vim.opt.hlsearch = false
 vim.opt.incsearch = true
-
 vim.opt.scrolloff = 10
+
+vim.opt.undodir = os.getenv("XDG_CONFIG_HOME") .. "/nvim/undodir";
+vim.opt.undofile = true
+
+-- enable cursorline
+vim.o.cursorline = true
+vim.o.cuc = true
+
+vim.opt.wrap = false
+
 
 vim.g.mapleader = " "
 vim.cmd("map <leader>q :q<cr>")
 vim.cmd("map <leader>w :w<cr>")
+
+
 vim.keymap.set("n", "<M-j>", ":m .+1<cr>")
 vim.keymap.set("n", "<M-k>", ":m .-2 <cr>")
+
+vim.keymap.set({ 'n', 'v' }, '<leader>i', ':Gen<CR>')
+
 
 -- Lazy paackage manager install
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
@@ -55,8 +72,15 @@ local plugins = {
   opts = { }},
 
     {'alec-gibson/nvim-tetris'},
-    {
-    'goolord/alpha-nvim'};
+    {'goolord/alpha-nvim'},
+    {'lewis6991/gitsigns.nvim'},
+    {"hrsh7th/cmp-buffer"},
+	{ "David-Kunz/gen.nvim" },
+	{'norcalli/nvim-colorizer.lua'},
+
+
+
+
     -- Lsp below and comp
     {"williamboman/mason.nvim"},
     {'williamboman/mason-lspconfig.nvim'},
@@ -82,7 +106,6 @@ local opts = {
 require("lazy").setup(plugins, opts)
 
 --init nvim-tree and config
---
 local treeFileConfig = require("nvim-tree").setup {}
 vim.cmd("map <leader>e :NvimTreeToggle<cr>")
 
@@ -110,7 +133,7 @@ end)
 
 require('mason').setup({})
 require('mason-lspconfig').setup({
-    ensure_installed = {'tsserver', 'rust_analyzer', 'lua_ls', 'bashls','html',},
+    ensure_installed = {'tsserver', 'rust_analyzer', 'lua_ls', 'bashls','html','pyright', 'asm_lsp'},
     handlers = {
         lsp_zero.default_setup,
         tsserver = function()
@@ -134,11 +157,43 @@ lspconfig.html.setup({
     cmd = { "vscode-html-language-server", "--stdio" },
 })
 lspconfig.bashls.setup({})
+lspconfig.pyright.setup({})
 
 
 
 local luasnip = require('luasnip')
 --may be ueless idk
+
+
+--gdscript lsp setup
+require('lspconfig').gdscript.setup{
+    on_attach = on_attach,
+    flags = {
+      debounce_text_changes = 150,
+    },
+    vim.cmd([[
+  setlocal foldmethod=expr
+  setlocal tabstop=4
+  setlocal shiftwidth=4
+  setlocal indentexpr=
+  ]])
+  }
+
+--[[ Alternative way of dooing GodotLsp 
+local port = os.getenv('GDScript_Port') or '6005'
+local cmd = vim.lsp.rpc.connect('127.0.0.1', port)
+local pipe = '/path/to/godot.pipe' -- I use /tmp/godot.pipe
+
+    print("Activating GodotLsp")
+    vim.lsp.start({
+    name = 'Godot',
+    cmd = cmd,
+    root_dir = vim.fs.dirname(vim.fs.find({ 'project.godot', '.git' }, { upward = true })[1]),
+    on_attach = function(client, bufnr)
+        vim.api.nvim_command('echo serverstart("' .. pipe .. '")')
+    end
+    })
+]]--
 
 --vs code -like 
 require("luasnip.loaders.from_vscode").lazy_load({include = { "python", "html"}})
@@ -149,6 +204,8 @@ cmp.setup {
     sources = {
         {name = 'nvim_lsp'},
         {name = 'luasnip'},
+        {name =  'buffer'},
+        {name = 'Godot'},
     },
     snippet = {
         expand = function(args)
@@ -180,6 +237,21 @@ cmp.setup {
         }),
     }
 }
+
+
+-- Ollama ap 
+local gen = require('gen')
+gen.setup({
+	model = "codellama", -- The default model to use.
+})
+
+
+--gitsigns
+require('gitsigns').setup{}
+
+
+---@diagnostic disable-next-line: unused-local
+local colorize = require'colorizer'.setup()
 
 
 -- init telescope plugin and config keybindings
@@ -223,7 +295,7 @@ alpha.setup(dashboard.opts)
 -- init and setup tree sitter
 local config = require("nvim-treesitter.configs")
 config.setup({
-          ensure_installed = { "c", "lua", "vim", "vimdoc", "rust", "python", "javascript", "html" , "gdscript", },
+          ensure_installed = { "c", "lua", "vim", "vimdoc", "rust", "python", "javascript", "html" , "gdscript","nasm"},
           sync_install = false,
           highlight = { enable = true },
           indent = { enable = true },  
