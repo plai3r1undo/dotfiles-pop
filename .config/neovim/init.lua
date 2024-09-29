@@ -78,6 +78,9 @@ local plugins = {
 	{ "David-Kunz/gen.nvim" },
 	{'norcalli/nvim-colorizer.lua'},
 
+	{"iamcco/markdown-preview.nvim", cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" }, ft = { "markdown" }, build = function() vim.fn["mkdp#util#install"]() end,},
+
+
 
 
 
@@ -93,6 +96,7 @@ local plugins = {
     {"L3MON4D3/LuaSnip", build = "make install_jsregexp"},
 
     {'nvim-telescope/telescope-ui-select.nvim' },
+    {'mfussenegger/nvim-dap' },
 
 
 }
@@ -133,7 +137,7 @@ end)
 
 require('mason').setup({})
 require('mason-lspconfig').setup({
-    ensure_installed = {'tsserver', 'rust_analyzer', 'lua_ls', 'bashls','html','pyright', 'asm_lsp'},
+    ensure_installed = {'rust_analyzer', 'lua_ls', 'bashls','html','pyright', 'asm_lsp', 'clangd'},
     handlers = {
         lsp_zero.default_setup,
         tsserver = function()
@@ -179,6 +183,12 @@ require('lspconfig').gdscript.setup{
   ]])
   }
 
+local dap = require('dap')
+dap.adapters.godot = {
+  type = "server",
+  host = '127.0.0.1',
+  port = 6006,
+}
 --[[ Alternative way of dooing GodotLsp 
 local port = os.getenv('GDScript_Port') or '6005'
 local cmd = vim.lsp.rpc.connect('127.0.0.1', port)
@@ -242,7 +252,7 @@ cmp.setup {
 -- Ollama ap 
 local gen = require('gen')
 gen.setup({
-	model = "codellama", -- The default model to use.
+	model = "codellama:13b", -- The default model to use.
 })
 
 
