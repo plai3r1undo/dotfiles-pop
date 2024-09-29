@@ -4,10 +4,11 @@
 
 
 alias vim="nvim"
-alias ll="ls -la"
+alias ll="ls -lah"
 alias ls="ls -a"
 alias ghel="cd /media/francesco/tartarughello/"
 alias notes="nvim /home/francesco/Documents/Notes"
+alias nx="nix-env"
 
 
 #confim befor ocerwriting
